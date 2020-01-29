@@ -49,4 +49,19 @@ describe('Session', () => {
 
     expect(response.status).toBe(401);
   });
+
+  it('Should not be able to login without put a email', async () => {
+    const response = await request(app)
+      .post('/sessions')
+      .send({ email: '', password: 'notPutEmail' });
+
+    expect(response.status).toBe(400);
+  });
+  it('Should not be able to login without put a password', async () => {
+    const response = await request(app)
+      .post('/sessions')
+      .send({ email: 'admin@fastfeet.com', password: '' });
+
+    expect(response.status).toBe(400);
+  });
 });
