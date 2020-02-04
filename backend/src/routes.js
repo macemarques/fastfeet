@@ -4,12 +4,16 @@ import UserController from './app/controllers/UserController';
 import SessionController from './app/controllers/SessionController';
 
 import authMiddleware from './app/middlewares/auth';
+import RecipientController from './app/controllers/RecipientController';
 
 const routes = new Router();
 
 routes.post('/sessions', SessionController.store);
 
-routes.post('/users', authMiddleware, UserController.store);
+routes.post('/users', UserController.store);
 routes.put('/users', authMiddleware, UserController.update);
+
+routes.post('/recipients', authMiddleware, RecipientController.store);
+routes.put('/recipients/edit/:id', authMiddleware, RecipientController.update);
 
 export default routes;
