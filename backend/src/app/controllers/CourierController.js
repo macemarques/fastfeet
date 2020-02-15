@@ -1,9 +1,19 @@
 import * as Yup from 'yup';
 import Courier from '../models/Courier';
+import File from '../models/File';
 
 class CourierController {
   async show(req, res) {
-    const courierList = await Courier.findAll();
+    const courierList = await Courier.findAll({
+      attributes: ['name', 'email'],
+      include: [
+        {
+          model: File,
+          as: 'avatar',
+          attributes: ['id', 'name', 'path', 'url'],
+        },
+      ],
+    });
 
     return res.status(200).json({ courierList });
   }
