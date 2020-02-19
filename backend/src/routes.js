@@ -21,6 +21,7 @@ routes.post('/users', UserController.store);
 routes.put('/users', authMiddleware, UserController.update);
 
 routes.post('/recipients', authMiddleware, RecipientController.store);
+routes.get('/recipients', authMiddleware, RecipientController.index);
 routes.put('/recipients/edit/:id', authMiddleware, RecipientController.update);
 
 routes.post(
