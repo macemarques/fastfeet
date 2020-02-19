@@ -1,11 +1,35 @@
 import * as Yup from 'yup';
+import { Op } from 'sequelize';
 import Courier from '../models/Courier';
 import File from '../models/File';
 
 class CourierController {
-  async show(req, res) {
+  async index(req, res) {
+    const { courierSearch } = req.query;
+
+    if (courierSearch) {
+      const couriers = await Courier.findAll({
+        attributes: ['id', 'name', 'email'],
+        order: [['name', 'ASC']],
+        where: { name: { [Op.iLike]: `%${courierSearch}%` } },
+        include: [
+          {
+            model: File,
+            as: 'avatar',
+            attributes: ['id', 'name', 'path', 'url'],
+          },
+        ],
+      });
+
+      if (couriers.length === 0) {
+        return res.status(400).json({ error: 'Nothing found...' });
+      }
+
+      return res.status(200).json(couriers);
+    }
+
     const courierList = await Courier.findAll({
-      attributes: ['name', 'email'],
+      attributes: ['id', 'name', 'email'],
       include: [
         {
           model: File,

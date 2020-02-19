@@ -32,7 +32,7 @@ routes.post(
 routes.post('/files/signatures', upload.single('file'), FileController.store);
 
 routes.post('/couriers', authMiddleware, CourierController.store);
-routes.get('/couriers', authMiddleware, CourierController.show);
+routes.get('/couriers', authMiddleware, CourierController.index);
 routes.put(
   '/couriers/edit/:courier_id',
   authMiddleware,
