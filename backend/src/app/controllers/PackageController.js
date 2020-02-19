@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { Op } from 'sequelize';
 import Package from '../models/Package';
 import Queue from '../../lib/Queue';
 import Courier from '../models/Courier';
@@ -8,6 +9,21 @@ import File from '../models/File';
 
 class PackageController {
   async index(req, res) {
+    const { productSearch } = req.query;
+
+    if (productSearch) {
+      const products = await Package.findAll({
+        order: [['product', 'ASC']],
+        where: { product: { [Op.iLike]: `%${productSearch}%` } },
+      });
+
+      if (products.length === 0) {
+        return res.status(400).json({ error: 'Nothing found...' });
+      }
+
+      return res.status(200).json(products);
+    }
+
     const pckgs = await Package.findAll({
       attributes: ['product', 'start_date', 'end_date', 'canceled_at'],
       include: [
