@@ -7,11 +7,43 @@ import Queue from '../../lib/Queue';
 
 class DeliveryProblemController {
   async index(req, res) {
-    const pckgsWithProblem = await DeliveryProblem.findAll();
-    return res.status(200).json(pckgsWithProblem);
+    const numberOfResults = 10;
+
+    const { page = 1 } = req.query;
+
+    if (page <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'Somenthing went wrong with your page number...' });
+    }
+
+    const numberOfDeliveryProblems = await DeliveryProblem.count();
+
+    if (numberOfDeliveryProblems === 0) {
+      return res.status(200).json({ warning: 'No delivery problems so far.' });
+    }
+
+    const divisible = numberOfDeliveryProblems % numberOfResults === 0;
+    const valueToBeAdded = divisible ? 0 : 1;
+
+    const numberOfPages =
+      Math.floor(numberOfDeliveryProblems / numberOfResults) + valueToBeAdded;
+
+    const deliveryProblems = await DeliveryProblem.findAll();
+    return res.status(200).json([deliveryProblems, numberOfPages]);
   }
 
   async show(req, res) {
+    const numberOfResults = 10;
+
+    const { page = 1 } = req.query;
+
+    if (page <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'Somenthing went wrong with your page number...' });
+    }
+
     const { package_id } = req.params;
     const schema = Yup.object().shape({
       package_id: Yup.number().required(),
@@ -27,11 +59,31 @@ class DeliveryProblemController {
       return res.status(400).json({ error: 'Package not found.' });
     }
 
-    const pckgWithProblem = await DeliveryProblem.findAll({
-      where: package_id,
+    const numberOfDeliveryProblems = await DeliveryProblem.count({
+      where: { package_id },
     });
 
-    return res.status(200).json(pckgWithProblem);
+    if (numberOfDeliveryProblems === 0) {
+      return res.status(200).json({
+        information: 'There is no delivery problems to this package.',
+      });
+    }
+
+    const divisible = numberOfDeliveryProblems % numberOfResults === 0;
+    const valueToBeAdded = divisible ? 0 : 1;
+
+    const numberOfPages =
+      Math.floor(numberOfDeliveryProblems / numberOfResults) + valueToBeAdded;
+
+    const pckgWithProblem = await DeliveryProblem.findAll({
+      where: { package_id },
+    });
+
+    if (page > numberOfPages) {
+      return res.status(400).json({ error: 'This page does not exists.' });
+    }
+
+    return res.status(200).json([pckgWithProblem, numberOfPages]);
   }
 
   async store(req, res) {

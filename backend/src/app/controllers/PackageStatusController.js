@@ -18,6 +18,16 @@ import Recipient from '../models/Recipient';
 
 class PackageStatusController {
   async show(req, res) {
+    const numberOfResults = 10;
+
+    const { page = 1 } = req.query;
+
+    if (page <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'Somenthing went wrong with your page number...' });
+    }
+
     const { courier_id } = req.params;
 
     const courierExists = await Courier.findByPk(courier_id);
@@ -25,6 +35,29 @@ class PackageStatusController {
     if (!courierExists) {
       return res.status(400).json({ error: 'Courier not found.' });
     }
+
+    const numberOfPackages = await Package.count({
+      where: {
+        end_date: {
+          [Op.ne]: null,
+        },
+        signature_id: {
+          [Op.ne]: null,
+        },
+      },
+    });
+
+    if (numberOfPackages === 0) {
+      return res
+        .status(200)
+        .json({ warning: 'There is no delivered packages into your account.' });
+    }
+
+    const divisible = numberOfPackages % numberOfResults === 0;
+    const valueToBeAdded = divisible ? 0 : 1;
+
+    const numberOfPages =
+      Math.floor(numberOfPackages / numberOfResults) + valueToBeAdded;
 
     const pckgsDelivered = await Package.findAll({
       where: {
@@ -41,7 +74,7 @@ class PackageStatusController {
       ],
     });
 
-    return res.json(pckgsDelivered);
+    return res.json([pckgsDelivered, numberOfPages]);
   }
 
   async update(req, res) {

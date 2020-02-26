@@ -4,10 +4,36 @@ import Recipient from '../models/Recipient';
 
 class RecipientController {
   async index(req, res) {
+    const numberOfResults = 10;
+    const { page = 1 } = req.query;
+
+    if (page <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'Somenthing went wrong with your page number...' });
+    }
+
     const { recipientSearch } = req.query;
 
     if (recipientSearch) {
+      const numberOfRecipients = await Recipient.count({
+        where: { name: { [Op.iLike]: `%${recipientSearch}%` } },
+      });
+
+      if (numberOfRecipients === 0) {
+        return res.status(400).json({ error: 'Nothing found...' });
+      }
+
+      const divisible = numberOfRecipients % numberOfResults === 0;
+      const valueToBeAdded = divisible ? 0 : 1;
+
+      const numberOfPages =
+        Math.floor(numberOfRecipients / numberOfResults) + valueToBeAdded;
+
       const recipients = await Recipient.findAll({
+        order: [['name', 'ASC']],
+        limit: numberOfResults,
+        offset: (page - 1) * numberOfResults,
         attributes: [
           'id',
           'name',
@@ -18,18 +44,38 @@ class RecipientController {
           'number',
           'addicional_address_info',
         ],
-        order: [['name', 'ASC']],
         where: { name: { [Op.iLike]: `%${recipientSearch}%` } },
       });
 
-      if (recipients.length === 0) {
-        return res.status(400).json({ error: 'Nothing found...' });
+      if (page > numberOfPages) {
+        return res.status(400).json({ error: 'This page does not exists.' });
       }
 
-      return res.status(200).json(recipients);
+      return res.status(200).json([recipients, numberOfPages]);
+    }
+
+    const numberOfRecipients = await Recipient.count();
+
+    if (numberOfRecipients === 0) {
+      return res
+        .status(200)
+        .json({ warning: 'There is no recipient registred into database.' });
+    }
+
+    const divisible = numberOfRecipients % numberOfResults === 0;
+    const valueToBeAdded = divisible ? 0 : 1;
+
+    const numberOfPages =
+      Math.floor(numberOfRecipients / numberOfResults) + valueToBeAdded;
+
+    if (page > numberOfPages) {
+      return res.status(400).json({ error: 'This page does not exists.' });
     }
 
     const recipientList = await Recipient.findAll({
+      order: [['name', 'ASC']],
+      limit: numberOfResults,
+      offset: (page - 1) * numberOfResults,
       attributes: [
         'id',
         'name',
@@ -42,7 +88,7 @@ class RecipientController {
       ],
     });
 
-    return res.status(200).json(recipientList);
+    return res.status(200).json([recipientList, numberOfPages]);
   }
 
   async store(req, res) {

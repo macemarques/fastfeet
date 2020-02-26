@@ -48,7 +48,7 @@ routes.get('/couriers/:courier_id/deliveries', PackageController.index);
 routes.get('/couriers/:courier_id/delivered', PackageStatusController.show);
 
 routes.get('/packages', authMiddleware, PackageController.index);
-routes.get('/packages/:package_id', authMiddleware, PackageController.show);
+routes.get('/packages/:courier_id', authMiddleware, PackageController.show);
 routes.put('/packages/:package_id', authMiddleware, PackageController.update);
 routes.post('/packages', authMiddleware, PackageController.store);
 routes.delete(
@@ -68,7 +68,7 @@ routes.get(
 routes.get(
   '/delivery/:package_id/problems',
   authMiddleware,
-  DeliveryProblemController.index
+  DeliveryProblemController.show
 );
 routes.post('/delivery/:package_id/problems', DeliveryProblemController.store);
 routes.delete(
