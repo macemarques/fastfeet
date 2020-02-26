@@ -30,6 +30,14 @@ class PackageStatusController {
 
     const { courier_id } = req.params;
 
+    const schema = Yup.object().shape({
+      courier_id: Yup.number().required(),
+    });
+
+    if (!(await schema.isValid({ courier_id }))) {
+      return res.status(400).json({ error: 'Validation fails.' });
+    }
+
     const courierExists = await Courier.findByPk(courier_id);
 
     if (!courierExists) {
